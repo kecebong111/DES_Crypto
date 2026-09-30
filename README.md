@@ -78,6 +78,22 @@ CRYPTO_API_TIMEOUT_MS=5000
 APP_NAME=DES Explorer Crypto API
 ```
 
+## Free deployment
+
+The repository includes deployment configuration for:
+
+- **Render Free** for FastAPI through `render.yaml`.
+- **Vercel Hobby** for Next.js through `apps/web/vercel.json`.
+
+Deploy FastAPI first, then set these variables in the Vercel project:
+
+```env
+CRYPTO_API_URL=https://your-render-service.onrender.com
+CRYPTO_API_TIMEOUT_MS=70000
+```
+
+The longer production timeout accounts for Render Free cold starts. Complete instructions are in [docs/deployment.md](docs/deployment.md).
+
 ## Testing
 
 Python tests:
@@ -116,3 +132,4 @@ K16:        CB3D8B0E17F5
 ## Documentation
 
 - [API contract](docs/api-contract.md)
+- [Deployment](docs/deployment.md)

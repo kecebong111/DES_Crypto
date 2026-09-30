@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: des-explorer-api
+    runtime: python
+    plan: free
+    region: singapore
+    rootDir: apps/crypto-api
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.15
+      - key: APP_NAME
+        value: DES Explorer Crypto API
