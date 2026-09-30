@@ -7,6 +7,5 @@ __pycache__/
 .env
 .env.*
 !.env.example
-apps/web/src/generated/
 .DS_Store
 *.log

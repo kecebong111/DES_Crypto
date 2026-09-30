@@ -1,124 +1,118 @@
 # DES Explorer
 
-DES Explorer is a college assignment that demonstrates the Data Encryption Standard (DES). It uses **Next.js with TypeScript and Tailwind CSS** for the web application, **FastAPI and Pydantic** for DES calculations, and optional **Neon PostgreSQL with Prisma** for operation metadata.
+DES Explorer is a web application for studying the Data Encryption Standard (DES). It implements one-block encryption, decryption, and the complete 16-round key schedule without using a cryptography library.
 
-The project implements single-block DES encryption, decryption, and key scheduling without a cryptography library. DES is obsolete and should only be used for study. No local PostgreSQL installation is required.
+DES is obsolete and must not be used to protect real data.
 
-## macOS setup
+## Features
 
-Run from the repository root. Use Node 24 (verified 24.18.0), npm 11.16.0, and Python 3.13 (verified 3.13.15). With Homebrew already installed:
+- Encrypt one 64-bit block from text or hexadecimal input.
+- Decrypt one 64-bit hexadecimal block.
+- Display PC-1, C0 and D0, the shift schedule, PC-2, and all round keys.
+- Preserve leading zeros in binary and hexadecimal output.
+- Validate text by UTF-8 byte length.
+
+## Technology
+
+- Next.js, React, TypeScript, and Tailwind CSS
+- FastAPI and Pydantic
+- Python standard library for the DES implementation
+
+The request flow is:
+
+```text
+Browser -> Next.js API routes -> FastAPI -> DES implementation
+```
+
+No database is required because every calculation is stateless.
+
+## Requirements
+
+- Node.js 24
+- npm 11
+- Python 3.13
+
+## Installation
+
+Run these commands from the repository root:
 
 ```bash
-brew install node@24 python@3.13
-export PATH="$(brew --prefix node@24)/bin:$PATH"
 python3.13 -m venv apps/crypto-api/.venv
 apps/crypto-api/.venv/bin/python -m pip install -r apps/crypto-api/requirements.txt
 npm --prefix apps/web ci
-cp -n apps/web/.env.example apps/web/.env
-cp -n apps/crypto-api/.env.example apps/crypto-api/.env
-npm --prefix apps/web run prisma:generate
+cp apps/web/.env.example apps/web/.env
+cp apps/crypto-api/.env.example apps/crypto-api/.env
 ```
 
-`.nvmrc` and `.python-version` record the versions used during development. Dependency versions are pinned in `package-lock.json` and `requirements.txt`.
+## Running the application
 
-### Terminal 1: Next.js
+Start FastAPI in the first terminal:
 
 ```bash
-cd /Users/adit/Projects/cryptoweb/apps/web
+cd apps/crypto-api
+source .venv/bin/activate
+python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+Start Next.js in the second terminal:
+
+```bash
+cd apps/web
 npm run dev
 ```
 
-Open <http://localhost:3000>; `/` redirects to `/encryption`. Other pages: `/decryption` and `/key-scheduling`.
-
-### Terminal 2: FastAPI
-
-```bash
-cd /Users/adit/Projects/cryptoweb/apps/crypto-api
-source .venv/bin/activate
-python -m uvicorn app.main:app --reload --host 127.0.0.1 --port 8000 --no-access-log
-```
-
-Health: <http://127.0.0.1:8000/health>. OpenAPI UI: <http://127.0.0.1:8000/docs>. Web connectivity check: <http://localhost:3000/api/health>.
+Open <http://localhost:3000>. The FastAPI documentation is available at <http://127.0.0.1:8000/docs>.
 
 ## Environment variables
 
-| File | Variable | Purpose |
-| --- | --- | --- |
-| `apps/web/.env` | `CRYPTO_API_URL` | Server-only Python origin; default example `http://127.0.0.1:8000` |
-| `apps/web/.env` | `CRYPTO_API_TIMEOUT_MS` | Server fetch timeout, 5000 ms by default, allowed 1–120000 |
-| `apps/web/.env` | `DATABASE_URL` | Neon **pooled** URL, used only by lazy application Prisma client |
-| `apps/web/.env` | `DIRECT_URL` | Neon **direct/unpooled** URL, used by Prisma CLI via `prisma.config.ts` |
-| `apps/crypto-api/.env` | `APP_NAME` | FastAPI application title |
+`apps/web/.env`:
 
-All `.env` files are ignored by Git. Do not use `NEXT_PUBLIC_` for service or database URLs. Use `.env` in the web app so Next.js and Prisma read the same configuration, then restart the servers after making changes. Python has no database credentials or database dependencies.
-
-## Optional Neon database
-
-The DES features do not require a database. A Neon database is only needed if operation metadata is added later.
-
-Copy the pooled and direct connection URLs from the Neon **Connect** dialog into `apps/web/.env`. The pooled hostname includes `-pooler`; the direct hostname does not. `DIRECT_URL` corresponds to `DATABASE_URL_UNPOOLED` in Neon's Prisma documentation.
-
-Prisma 7 uses the `prisma-client` generator, explicit output, `prisma.config.ts`, and `@prisma/adapter-neon`; it does not put connection URLs in `schema.prisma`. Generation and schema validation are offline:
-
-```bash
-npm --prefix apps/web run prisma:generate
-npm --prefix apps/web run prisma:validate
+```env
+CRYPTO_API_URL=http://127.0.0.1:8000
+CRYPTO_API_TIMEOUT_MS=5000
 ```
 
-To create and apply the initial migration on an empty development database, run from `apps/web`:
+`apps/crypto-api/.env`:
 
-```bash
-npx prisma migrate dev --name init_operation_log --create-only
-# Check the generated SQL before applying it.
-npx prisma migrate deploy
+```env
+APP_NAME=DES Explorer Crypto API
 ```
 
-`migrate dev` may require permission to create a shadow database. Check the generated SQL before applying it. Existing databases should be introspected and baselined instead of reset.
+## Testing
 
-`OperationLog` contains only `id`, `operation`, `algorithm`, and `createdAt`. Plaintext, keys, subkeys, traces, and request bodies must not be stored. DES endpoints do not use Prisma and continue to work when the database is unavailable.
-
-## Checks
+Python tests:
 
 ```bash
-npm --prefix apps/web run lint
-npm --prefix apps/web run typecheck
-npm --prefix apps/web run build
-npm --prefix apps/web run prisma:validate
-apps/crypto-api/.venv/bin/python -m pip check
-apps/crypto-api/.venv/bin/python -m compileall -q apps/crypto-api/app
+cd apps/crypto-api
+.venv/bin/python -m unittest discover -s tests -v
 ```
 
-Manual checks with both servers running:
+Web checks:
 
 ```bash
-curl -i http://127.0.0.1:8000/health
-curl -i http://localhost:3000/api/health
-curl -i http://localhost:3000/api/des/encrypt \
-  -H 'Content-Type: application/json' \
-  -d '{"plaintext":{"format":"hex","value":"0123456789ABCDEF"},"key":{"format":"hex","value":"133457799BBCDFF1"}}'
-# Expected: 200, ciphertextHex 85E813540F0AB405.
-curl -i http://localhost:3000/api/des/encrypt \
-  -H 'Content-Type: application/json' -d '{}'
-# Expected: 422 VALIDATION_ERROR.
-# Stop Python, then repeat /api/health: expected 503 BACKEND_UNAVAILABLE.
+cd apps/web
+npm run lint
+npm run typecheck
+npm run build
 ```
 
-Shell history stores command arguments, so the examples use published test vectors. For a production web run, execute `npm run build` followed by `npm start` from `apps/web`.
+Integration test, after building the web application:
+
+```bash
+cd apps/crypto-api
+.venv/bin/python tests/integration_des.py
+```
+
+## Reference vector
+
+```text
+Plaintext:  0123456789ABCDEF
+Key:        133457799BBCDFF1
+Ciphertext: 85E813540F0AB405
+K1:         1B02EFFC7072
+K16:        CB3D8B0E17F5
+```
 
 ## Documentation
 
-- [Architecture](docs/architecture.md)
 - [API contract](docs/api-contract.md)
-- [Frontend](docs/frontend.md)
-- [Testing](docs/testing.md)
-
-## References
-
-- Next.js 16 installation: <https://nextjs.org/docs/app/getting-started/installation>
-- Tailwind 4 Next.js PostCSS setup: <https://tailwindcss.com/docs/installation/framework-guides/nextjs>
-- Prisma 7 generator/adapter: <https://www.prisma.io/docs/orm/v7/prisma-schema/overview/generators>
-- Neon Prisma integration: <https://neon.com/docs/guides/prisma>
-- FastAPI environments: <https://fastapi.tiangolo.com/virtual-environments/>
-- Pydantic 2 validators: <https://docs.pydantic.dev/latest/concepts/validators/>
-
-The project uses Prisma 7.10.0 because Prisma 8 was still a release candidate when the dependencies were selected. ESLint is pinned to version 9.39.5 for compatibility with the installed Next.js configuration.

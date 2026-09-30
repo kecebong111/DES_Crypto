@@ -114,6 +114,6 @@ This contract covers the implemented handlers; Next.js framework-generated 404/4
 
 GET Python `/health`: `200 {"status":"ok","service":"crypto-api"}`.
 
-GET Next `/api/health`: `200 {"status":"ok","service":"web","python":"ok"}` only after reaching Python. Otherwise controlled 500/502/503/504 errors as above. Health does not require or contact Neon. Responses from the proxy and Python error handlers use `Cache-Control: no-store`.
+GET Next `/api/health`: `200 {"status":"ok","service":"web","python":"ok"}` only after reaching Python. Otherwise controlled 500/502/503/504 errors as above. Responses from the proxy and Python error handlers use `Cache-Control: no-store`.
 
 Python `/openapi.json` exposes machine-readable request and response schemas. Test commands and reference values are listed in [testing.md](testing.md).
