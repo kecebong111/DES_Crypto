@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+body { max-width: 64rem; margin: auto; padding: 2rem; background: #f8fafc; color: #172033; font-family: Arial, sans-serif; }
+header, main, footer { margin-block: 1.5rem; }
+main { padding: 1.5rem; background: white; border: 1px solid #dce2eb; }
+h1 { font-size: 1.75rem; font-weight: 600; margin-bottom: 1rem; }
+a { color: #174bb3; text-decoration: underline; }
+:focus-visible { outline: 3px solid #174bb3; outline-offset: 4px; }

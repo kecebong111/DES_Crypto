@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.venv/
+__pycache__/
+*.py[cod]
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+apps/web/src/generated/
+.DS_Store
+*.log
